@@ -1,16 +1,24 @@
 import {Joke} from "./Joke.tsx";
-import {useEffect, useState} from "react";
+import {useEffect} from "react";
+import {useOutletContext} from "react-router";
 
 export type JokeType = {
     type: string;
     setup: string;
     punchline: string;
     id: number;
+    saved: boolean;
 }
 
-export const NewJokes = () => {
-    const [jokes, setJokes] = useState<JokeType[]>([]);
+export type JokeOutletContext = {
+    jokes: JokeType[];
+    setJokes: React.Dispatch<React.SetStateAction<JokeType[]>>;
+};
 
+export const NewJokes = () => {
+    const { jokes, setJokes } = useOutletContext<JokeOutletContext>();
+
+    // get the jokes from the API and save them in jokes state
     const fetchJokes = async () => {
         try {
             const data = await fetch('https://official-joke-api.appspot.com/random_ten');
@@ -27,16 +35,26 @@ export const NewJokes = () => {
         }
     }
 
+    // get the jokes when the component is being rendered
     useEffect(() => {
         fetchJokes();
     },[])
 
+    // update whether a joke is saved
+    const handleSave = (id: number) => {
+        setJokes((prevJokes) =>
+            prevJokes.map((joke) =>
+                joke.id === id ? { ...joke, saved: !joke.saved } : joke
+            )
+        );
+    };
+
     return (
-        <>
+        <div className={"flex flex-1 flex-col w-96 h-60 gap-4"}>
             { jokes.map(joke => (
-                <Joke key={joke.id} joke={joke}/>
+                <Joke key={joke.id} joke={joke} onSave={handleSave} />
             ))
             }
-        </>
+        </div>
     )
 }
