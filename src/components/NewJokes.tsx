@@ -1,6 +1,7 @@
-import {Joke} from "./Joke.tsx";
-import {useEffect} from "react";
-import {useOutletContext} from "react-router";
+import { Joke } from "./Joke.tsx";
+import { useEffect } from "react";
+import { useOutletContext } from "react-router";
+import { useSaveJoke } from "./useSaveJoke.tsx";
 
 export type JokeType = {
     type: string;
@@ -36,25 +37,32 @@ export const NewJokes = () => {
     }
 
     // get the jokes when the component is being rendered
+    // only if we don't have jokes already
     useEffect(() => {
-        fetchJokes();
+        if(jokes.length === 0) {
+            fetchJokes();
+        }
     },[])
 
-    // update whether a joke is saved
-    const handleSave = (id: number) => {
-        setJokes((prevJokes) =>
-            prevJokes.map((joke) =>
-                joke.id === id ? { ...joke, saved: !joke.saved } : joke
-            )
-        );
-    };
+    // update whether a joke is saved to library
+    const { handleSave }  = useSaveJoke(setJokes);
 
     return (
-        <div className={"flex flex-1 flex-col w-96 h-60 gap-4"}>
-            { jokes.map(joke => (
-                <Joke key={joke.id} joke={joke} onSave={handleSave} />
-            ))
-            }
-        </div>
+        <>
+            <div className={"flex flex-1 flex-col w-96 gap-4"}>
+                { jokes.map(joke => (
+                    <Joke key={joke.id} joke={joke} onSave={handleSave} />
+                ))
+                }
+            </div>
+            <div className="mt-6 mb-10">
+                {/* Retrieve new jokes from API */}
+                <button
+                    className="rounded bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 transition-colors"
+                    onClick={fetchJokes}>
+                    Load New Jokes
+                </button>
+            </div>
+        </>
     )
 }
